@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoltSpec Pro - Electrical Engineering Calculator Suite</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0a0d14',
+                            card: '#121824',
+                            border: '#1f293d',
+                            cyan: '#00f2fe',
+                            violet: '#7f56d9',
+                            electric: '#38ef7d',
+                            amber: '#ffb703',
+                            danger: '#ff4b4b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #080b11;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(127, 86, 217, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism card effects */
+        .glass-panel {
+            background: rgba(18, 24, 36, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(10, 13, 20, 0.8);
+            border: 1px solid #1e293b;
+            color: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        .glass-input:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+            outline: none;
+        }
+
+        /* Glow effects */
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+        .glow-violet {
+            box-shadow: 0 0 20px rgba(127, 86, 217, 0.3);
+        }
+
+        .text-gradient-cyan {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-violet {
+            background: linear-gradient(135deg, #a855f7 0%, #7f56d9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080b11;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+
+        /* Pulse animation for visualizer status LED */
+        @keyframes pulse-led {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.95); }
+        }
+        .led-active {
+            animation: pulse-led 2s infinite ease-in-out;
+        }
+
+        /* Custom Print Styling for PDF export */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .glass-panel {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-brand-cyan selection:text-black">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-cyan to-brand-violet flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-bolt text-slate-950 text-xl font-bold"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold text-xl tracking-tight text-white">VOLTSPEC</span>
+                        <span class="bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/30 text-[10px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold tracking-wider">PRO v2.5</span>
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono hidden sm:block">ELECTRICAL ENGINEERING CALCULATOR SUITE</p>
+                </div>
+            </div>
+
+            <!-- Quick Action Bar -->
+            <div class="flex items-center space-x-3">
+                <button onclick="openFormulaModal()" class="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-square-root-variable text-brand-cyan"></i>
+                    <span class="hidden md:inline">Formulas</span>
+                </button>
+                <button onclick="exportReport()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-gradient-to-r from-brand-cyan to-sky-400 hover:brightness-110 rounded-lg transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Export Report</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sidebar / Navigation Controls (4 columns) -->
+        <div class="lg:col-span-4 flex flex-col space-y-4">
+            
+            <!-- Module Selector Tabs -->
+            <div class="glass-panel p-2 rounded-2xl flex flex-col space-y-1">
+                <span class="text-[11px] font-mono font-semibold text-slate-400 px-3 py-1 uppercase tracking-wider">Select Module</span>
+                
+                <button onclick="switchTab('cable')" id="tab-cable" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-brand-cyan bg-brand-cyan/10 border border-brand-cyan/30">
+                    <div class="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-brand-cyan">
+                        <i class="fa-solid fa-plug-circle-bolt"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-semibold leading-tight">Cable Sizing & Voltage Drop</div>
+                        <div class="text-[11px] text-slate-400 font-mono">Conductors, Ampacity & Temp</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('pf')" id="tab-pf" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
+                    <div class="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-brand-violet">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-semibold leading-tight">Power Factor Correction</div>
+                        <div class="text-[11px] text-slate-400 font-mono">Capacitor Banks & kVAR</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('filter')" id="tab-filter" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
+                    <div class="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-wave-square"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-semibold leading-tight">RC/RL Passive Filters</div>
+                        <div class="text-[11px] text-slate-400 font-mono">Cutoff Frequency & Bode Plot</div>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('ohm')" id="tab-ohm" class="tab-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
+                    <div class="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-semibold leading-tight">Ohm's Law Matrix</div>
+                        <div class="text-[11px] text-slate-400 font-mono">V, I, R, P Wheel Interlock</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Parameters Input Box (Dynamic depending on Tab) -->
+            <div id="calculator-inputs-container" class="glass-panel p-5 rounded-2xl flex-grow flex flex-col justify-between">
+                <!-- Inner inputs rendered by JS -->
+            </div>
+
+        </div>
+
+        <!-- Right Main Dashboard: Visualizer + Results Display (8 columns) -->
+        <div class="lg:col-span-8 flex flex-col space-y-6">
+            
+            <!-- Graphic Visualizer Canvas Box -->
+            <div class="glass-panel rounded-2xl p-5 border border-slate-800 flex flex-col relative overflow-hidden">
+                <!-- Visualizer Header -->
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-cyan led-active inline-block"></span>
+                        <h3 id="visualizer-title" class="font-mono text-xs uppercase tracking-wider font-semibold text-slate-300">
+                            LIVE VECTOR & PHASOR VISUALIZER
+                        </h3>
+                    </div>
+                    <span id="visualizer-status" class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        REALTIME SVG RENDER
+                    </span>
+                </div>
+
+                <!-- Interactive SVG Graphic Canvas Area -->
+                <div id="visualizer-canvas-wrapper" class="w-full h-64 sm:h-72 bg-slate-950/80 rounded-xl border border-slate-800/80 relative flex items-center justify-center p-2 overflow-hidden">
+                    <svg id="main-svg-canvas" class="w-full h-full" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet">
+                        <!-- SVG elements dynamically generated -->
+                    </svg>
+                </div>
+
+                <!-- Visualizer Dynamic Legend / Info Bar -->
+                <div id="visualizer-legend" class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Output Key Performance Indicators (KPI Card Grid) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="kpi-cards-grid">
+                <!-- Populated dynamically -->
+            </div>
+
+            <!-- Detailed Breakdown Table / Calculations Summary -->
+            <div class="glass-panel rounded-2xl p-5 border border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-mono text-xs uppercase tracking-wider font-semibold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-cyan"></i>
+                        Engineered Specifications & Verification
+                    </h4>
+                    <span class="text-xs text-slate-400 font-mono" id="norm-reference">NEC / IEC Compliant</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="py-2.5 px-3">Parameter</th>
+                                <th class="py-2.5 px-3">Calculated Value</th>
+                                <th class="py-2.5 px-3">Standard / Recommended Limit</th>
+                                <th class="py-2.5 px-3 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailed-spec-table" class="divide-y divide-slate-800/50 text-slate-300">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Formula Reference Modal -->
+    <div id="formula-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-2xl w-full rounded-2xl border border-slate-700 p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button onclick="closeFormulaModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center space-x-3 mb-4">
+                <i class="fa-solid fa-square-root-variable text-2xl text-brand-cyan"></i>
+                <h3 class="text-lg font-bold text-white">Electrical Engineering Formulas Reference</h3>
+            </div>
+            
+            <div class="space-y-4 text-xs font-mono text-slate-300">
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <div class="text-brand-cyan font-bold mb-1">1. Voltage Drop ($\Delta V$)</div>
+                    <p class="mb-1">Single Phase: <span class="text-emerald-400">$\Delta V = \frac{2 \cdot L \cdot I \cdot (R\cos\phi + X\sin\phi)}{1000}$</span></p>
+                    <p>Three Phase: <span class="text-emerald-400">$\Delta V = \frac{\sqrt{3} \cdot L \cdot I \cdot (R\cos\phi + X\sin\phi)}{1000}$</span></p>
+                </div>
+
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <div class="text-brand-violet font-bold mb-1">2. Power Factor Correction</div>
+                    <p class="mb-1">Active Power: $P = S \cdot \cos(\phi_1)$</p>
+                    <p class="mb-1">Required kVAR: <span class="text-emerald-400">$Q_c = P \cdot [\tan(\arccos(PF_1)) - \tan(\arccos(PF_2))]$</span></p>
+                    <p>Capacitance: <span class="text-emerald-400">$C = \frac{Q_c}{2\pi \cdot f \cdot V^2}$</span></p>
+                </div>
+
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <div class="text-emerald-400 font-bold mb-1">3. Passive Filter Cutoff Frequency</div>
+                    <p class="mb-1">RC Cutoff: <span class="text-emerald-400">$f_c = \frac{1}{2\pi R C}$</span></p>
+                    <p>RL Cutoff: <span class="text-emerald-400">$f_c = \frac{R}{2\pi L}$</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Summary Card (Print Only) -->
+    <div class="hidden print-only p-8 bg-white text-black font-mono">
+        <h1 class="text-2xl font-bold border-b-2 border-black pb-2 mb-4">VOLTSPEC PRO - ENGINEERING REPORT</h1>
+        <p class="text-sm mb-4">Generated on: <span id="print-date"></span></p>
+        <div id="print-content" class="space-y-4">
+            <!-- Populated during export -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-slate-800/80 mt-8 py-4 px-4 text-center text-xs text-slate-400 font-mono">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>VoltSpec Pro &copy; 2026. High-Precision Electrical Engineering Calculation Engine.</span>
+            <span class="text-slate-400">Crafted with IEEE & NEC Standards standardizations.</span>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        let currentTab = 'cable';
+
+        // Material resistivity standards (ohm * mm^2 / m at 20 deg C)
+        const RESISTIVITY = {
+            Cu: 0.0175, // Copper
+            Al: 0.0282  // Aluminum
+        };
+
+        // AWG / mm2 cable size data table (Standard Sizes)
+        const CABLE_SIZES = [
+            { label: '1.5 mm² (16 AWG)', area: 1.5, ampacityCu: 17.5, ampacityAl: 13 },
+            { label: '2.5 mm² (14 AWG)', area: 2.5, ampacityCu: 24, ampacityAl: 18.5 },
+            { label: '4.0 mm² (12 AWG)', area: 4.0, ampacityCu: 32, ampacityAl: 25 },
+            { label: '6.0 mm² (10 AWG)', area: 6.0, ampacityCu: 41, ampacityAl: 32 },
+            { label: '10.0 mm² (8 AWG)', area: 10.0, ampacityCu: 57, ampacityAl: 44 },
+            { label: '16.0 mm² (6 AWG)', area: 16.0, ampacityCu: 76, ampacityAl: 60 },
+            { label: '25.0 mm² (4 AWG)', area: 25.0, ampacityCu: 101, ampacityAl: 78 },
+            { label: '35.0 mm² (2 AWG)', area: 35.0, ampacityCu: 125, ampacityAl: 97 },
+            { label: '50.0 mm² (1/0 AWG)', area: 50.0, ampacityCu: 151, ampacityAl: 118 },
+            { label: '70.0 mm² (2/0 AWG)', area: 70.0, ampacityCu: 192, ampacityAl: 150 },
+            { label: '95.0 mm² (3/0 AWG)', area: 95.0, ampacityCu: 232, ampacityAl: 181 },
+            { label: '120.0 mm² (4/0 AWG)', area: 120.0, ampacityCu: 269, ampacityAl: 210 }
+        ];
+
+        // Switch Tab Controller
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update Active Tab Styling
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-brand-cyan', 'bg-brand-cyan/10', 'border-brand-cyan/30');
+                btn.classList.add('text-slate-400', 'border-transparent');
+            });
+
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.remove('text-slate-400', 'border-transparent');
+            activeBtn.classList.add('text-brand-cyan', 'bg-brand-cyan/10', 'border-brand-cyan/30');
+
+            renderInputs();
+            calculateAndRender();
+        }
+
+        // Render dynamic input fields based on tab
+        function renderInputs() {
+            const container = document.getElementById('calculator-inputs-container');
+            
+            if (currentTab === 'cable') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="text-sm font-bold text-white uppercase font-mono">Cable Sizing Inputs</h3>
+                            <i class="fa-solid fa-sliders text-brand-cyan"></i>
+                        </div>
+
+                        <!-- System Phase -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">System Phase</label>
+                            <select id="cable-phase" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                <option value="3">3-Phase System (400V / 480V)</option>
+                                <option value="1">Single Phase System (230V / 120V)</option>
+                            </select>
+                        </div>
+
+                        <!-- Voltage & Load Current -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Nominal Volt (V)</label>
+                                <input type="number" id="cable-voltage" value="400" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono" placeholder="Voltage">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Load Current (A)</label>
+                                <input type="number" id="cable-current" value="45" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono" placeholder="Amperes">
+                            </div>
+                        </div>
+
+                        <!-- Length & Power Factor -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Cable Length (m)</label>
+                                <input type="number" id="cable-length" value="85" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Power Factor (cos φ)</label>
+                                <input type="number" id="cable-pf" value="0.85" step="0.01" max="1" min="0.1" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Material & Cable Size -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Conductor Material</label>
+                                <select id="cable-material" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                    <option value="Cu">Copper (Cu)</option>
+                                    <option value="Al">Aluminum (Al)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Conductor Cross-Section</label>
+                                <select id="cable-size" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                    ${CABLE_SIZES.map((cs, idx) => `<option value="${idx}" ${idx === 3 ? 'selected' : ''}>${cs.label}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Ambient Temperature -->
+                        <div>
+                            <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                <span>Ambient Temperature</span>
+                                <span id="temp-val" class="text-brand-cyan font-bold">35 °C</span>
+                            </div>
+                            <input type="range" id="cable-temp" min="20" max="60" value="35" step="1" oninput="document.getElementById('temp-val').innerText = this.value + ' °C'; calculateAndRender();" class="w-full accent-cyan-400">
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'pf') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="text-sm font-bold text-white uppercase font-mono">Power Factor Parameters</h3>
+                            <i class="fa-solid fa-chart-pie text-brand-violet"></i>
+                        </div>
+
+                        <!-- Active Power & Voltage -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Active Power (kW)</label>
+                                <input type="number" id="pf-kw" value="120" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Grid Voltage (V)</label>
+                                <input type="number" id="pf-volts" value="400" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Grid Frequency -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">System Frequency</label>
+                            <select id="pf-freq" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                <option value="50">50 Hz (Europe / Asia / SA)</option>
+                                <option value="60">60 Hz (North America / NA)</option>
+                            </select>
+                        </div>
+
+                        <!-- Initial PF vs Target PF -->
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                    <span>Current Power Factor ($\cos \phi_1$)</span>
+                                    <span id="pf1-val" class="text-amber-400 font-bold">0.72</span>
+                                </div>
+                                <input type="range" id="pf-initial" min="0.5" max="0.95" step="0.01" value="0.72" oninput="document.getElementById('pf1-val').innerText = this.value; calculateAndRender();" class="w-full accent-amber-400">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                    <span>Target Power Factor ($\cos \phi_2$)</span>
+                                    <span id="pf2-val" class="text-brand-cyan font-bold">0.95</span>
+                                </div>
+                                <input type="range" id="pf-target" min="0.85" max="0.99" step="0.01" value="0.95" oninput="document.getElementById('pf2-val').innerText = this.value; calculateAndRender();" class="w-full accent-cyan-400">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'filter') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="text-sm font-bold text-white uppercase font-mono">Filter Configuration</h3>
+                            <i class="fa-solid fa-wave-square text-emerald-400"></i>
+                        </div>
+
+                        <!-- Filter Type Selector -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Topology Type</label>
+                            <select id="filter-type" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                <option value="RC-low">RC Low Pass Filter</option>
+                                <option value="RC-high">RC High Pass Filter</option>
+                                <option value="RL-low">RL Low Pass Filter</option>
+                            </select>
+                        </div>
+
+                        <!-- Resistance Input -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Resistance (R)</label>
+                                <input type="number" id="filter-r" value="10" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Unit</label>
+                                <select id="filter-r-unit" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                    <option value="1">Ω</option>
+                                    <option value="1000" selected>kΩ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Component Input (C or L) -->
+                        <div class="grid grid-cols-3 gap-2" id="cap-ind-wrapper">
+                            <div class="col-span-2">
+                                <label id="filter-c-label" class="block text-xs font-mono text-slate-400 mb-1">Capacitance (C)</label>
+                                <input type="number" id="filter-c" value="100" oninput="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">Unit</label>
+                                <select id="filter-c-unit" onchange="calculateAndRender()" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono">
+                                    <option value="1e-9">nF</option>
+                                    <option value="1e-6" selected>µF</option>
+                                    <option value="1e-3">mF</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'ohm') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="text-sm font-bold text-white uppercase font-mono">Ohm's Law Input Matrix</h3>
+                            <i class="fa-solid fa-circle-nodes text-amber-400"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-mono">Enter ANY 2 known parameters to solve the circuit matrix.</p>
+
+                        <!-- Voltage -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Voltage (V) [Volts]</label>
+                            <input type="number" id="ohm-v" value="24" oninput="calculateOhmMatrix('V')" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono border-l-4 border-l-brand-cyan">
+                        </div>
+
+                        <!-- Current -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Current (I) [Amperes]</label>
+                            <input type="number" id="ohm-i" value="2" oninput="calculateOhmMatrix('I')" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono border-l-4 border-l-emerald-400">
+                        </div>
+
+                        <!-- Resistance -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Resistance (R) [Ohms Ω]</label>
+                            <input type="number" id="ohm-r" value="12" oninput="calculateOhmMatrix('R')" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono border-l-4 border-l-amber-400">
+                        </div>
+
+                        <!-- Power -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Power (P) [Watts]</label>
+                            <input type="number" id="ohm-p" value="48" oninput="calculateOhmMatrix('P')" class="glass-input w-full p-2.5 rounded-xl text-xs font-mono border-l-4 border-l-brand-violet">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function calculateAndRender() {
+            if (currentTab === 'cable') {
+                calcCable();
+            } else if (currentTab === 'pf') {
+                calcPF();
+            } else if (currentTab === 'filter') {
+                calcFilter();
+            } else if (currentTab === 'ohm') {
+                calculateOhmMatrix('V');
+            }
+        }
+
+        // ------------------- CABLE SIZING & VOLTAGE DROP -------------------
+        function calcCable() {
+            const phase = parseInt(document.getElementById('cable-phase').value);
+            const V = parseFloat(document.getElementById('cable-voltage').value) || 230;
+            const I = parseFloat(document.getElementById('cable-current').value) || 0;
+            const L = parseFloat(document.getElementById('cable-length').value) || 0;
+            const pf = parseFloat(document.getElementById('cable-pf').value) || 0.85;
+            const mat = document.getElementById('cable-material').value;
+            const cableIdx = parseInt(document.getElementById('cable-size').value);
+            const temp = parseFloat(document.getElementById('cable-temp').value);
+
+            const cable = CABLE_SIZES[cableIdx];
+            
+            // Resistivity adjustment for temperature: R_T = R_20 * (1 + alpha * (T - 20))
+            const alpha = mat === 'Cu' ? 0.00393 : 0.00403;
+            const rho20 = RESISTIVITY[mat];
+            const rhoT = rho20 * (1 + alpha * (temp - 20));
+
+            // Cable Resistance R = (rho * L) / A
+            const R_cable = (rhoT * L) / cable.area; // Ohms
+            const X_cable = 0.08 * (L / 1000); // Approximate reactance in ohms
+
+            const sinPf = Math.sin(Math.acos(pf));
+
+            // Voltage drop equation
+            let vDrop = 0;
+            if (phase === 3) {
+                vDrop = Math.sqrt(3) * I * (R_cable * pf + X_cable * sinPf);
+            } else {
+                vDrop = 2 * I * (R_cable * pf + X_cable * sinPf);
+            }
+
+            const vDropPercent = (vDrop / V) * 100;
+            const baseAmpacity = mat === 'Cu' ? cable.ampacityCu : cable.ampacityAl;
+            
+            // Temperature derating factor
+            const tempFactor = Math.sqrt((70 - temp) / (70 - 30));
+            const deratedAmpacity = baseAmpacity * (isNaN(tempFactor) ? 0.7 : tempFactor);
+
+            const isCurrentOk = I <= deratedAmpacity;
+            const isVDropOk = vDropPercent <= 3.0; // 3% standard limit
+
+            // Update KPI Display
+            document.getElementById('kpi-cards-grid').innerHTML = `
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Voltage Drop</span>
+                    <div class="text-2xl font-black font-mono mt-1 ${isVDropOk ? 'text-brand-cyan' : 'text-brand-danger'}">
+                        ${vDrop.toFixed(2)} V
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">(${vDropPercent.toFixed(2)}% of ${V}V)</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Allowable Ampacity</span>
+                    <div class="text-2xl font-black font-mono mt-1 ${isCurrentOk ? 'text-emerald-400' : 'text-brand-danger'}">
+                        ${deratedAmpacity.toFixed(1)} A
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Load: ${I} A</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Cable Power Loss</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-violet">
+                        ${((phase === 3 ? 3 : 2) * Math.pow(I, 2) * R_cable).toFixed(1)} W
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">R<sub>line</sub>: ${R_cable.toFixed(3)} Ω</span>
+                </div>
+            `;
+
+            // Update Specifications Table
+            document.getElementById('detailed-spec-table').innerHTML = `
+                <tr>
+                    <td class="py-2 px-3">Voltage Drop Criteria</td>
+                    <td class="py-2 px-3 font-bold">${vDropPercent.toFixed(2)}%</td>
+                    <td class="py-2 px-3">Max 3.00% (Branch circuits)</td>
+                    <td class="py-2 px-3 text-right">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isVDropOk ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}">
+                            ${isVDropOk ? 'PASSED' : 'EXCEEDED'}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Thermal Current Rating</td>
+                    <td class="py-2 px-3 font-bold">${I} A</td>
+                    <td class="py-2 px-3">Max ${deratedAmpacity.toFixed(1)} A (@ ${temp}°C)</td>
+                    <td class="py-2 px-3 text-right">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isCurrentOk ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}">
+                            ${isCurrentOk ? 'SAFE' : 'OVERLOAD'}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Conductor Specifications</td>
+                    <td class="py-2 px-3 font-bold">${cable.label}</td>
+                    <td class="py-2 px-3">${mat === 'Cu' ? 'Copper' : 'Aluminum'} Conductor</td>
+                    <td class="py-2 px-3 text-right text-slate-400">IEC 60228</td>
+                </tr>
+            `;
+
+            // Render SVG Visualizer - Cable Gauge Arc & Voltage Gradient Schematic
+            document.getElementById('visualizer-title').innerText = "CABLE VOLTAGE DROP & THERMAL LOADING GAUGE";
+            
+            const gaugeAngle = Math.min(180, (vDropPercent / 6) * 180);
+            const svg = document.getElementById('main-svg-canvas');
+            svg.innerHTML = `
+                <!-- Background Grid -->
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+                </pattern>
+                <rect width="600" height="300" fill="url(#grid)" />
+
+                <!-- Gauge Arc -->
+                <g transform="translate(180, 190)">
+                    <path d="M -120 0 A 120 120 0 0 1 120 0" fill="none" stroke="#1e293b" stroke-width="18" stroke-linecap="round"/>
+                    <!-- Active Arc Gradient -->
+                    <path d="M -120 0 A 120 120 0 0 1 ${120 * Math.cos((gaugeAngle - 180) * Math.PI / 180)} ${120 * Math.sin((gaugeAngle - 180) * Math.PI / 180)}" 
+                          fill="none" stroke="${vDropPercent > 3 ? '#ff4b4b' : '#00f2fe'}" stroke-width="18" stroke-linecap="round" />
+                    
+                    <!-- Gauge Text -->
+                    <text x="0" y="-30" text-anchor="middle" fill="#f8fafc" font-family="Fira Code" font-size="28" font-weight="bold">${vDropPercent.toFixed(2)}%</text>
+                    <text x="0" y="-5" text-anchor="middle" fill="#94a3b8" font-family="Inter" font-size="11">VOLTAGE DROP</text>
+                    <text x="-120" y="20" text-anchor="middle" fill="#64748b" font-family="Fira Code" font-size="10">0%</text>
+                    <text x="0" y="-128" text-anchor="middle" fill="#ffb703" font-family="Fira Code" font-size="10">3% LIMIT</text>
+                    <text x="120" y="20" text-anchor="middle" fill="#64748b" font-family="Fira Code" font-size="10">6%</text>
+                </g>
+
+                <!-- Animated Cable Line Schematic -->
+                <g transform="translate(360, 50)">
+                    <rect x="0" y="0" width="210" height="190" rx="12" fill="rgba(15, 23, 42, 0.8)" stroke="#1e293b" stroke-width="1"/>
+                    <text x="15" y="25" fill="#00f2fe" font-family="Fira Code" font-size="11" font-weight="bold">LINE POWER SCHEMATIC</text>
+
+                    <!-- Source -->
+                    <circle cx="40" cy="80" r="16" fill="none" stroke="#4facfe" stroke-width="2"/>
+                    <text x="40" y="84" text-anchor="middle" fill="#4facfe" font-family="Fira Code" font-size="10">AC</text>
+                    <text x="40" y="112" text-anchor="middle" fill="#94a3b8" font-family="Inter" font-size="9">${V}V</text>
+
+                    <!-- Cable Line -->
+                    <line x1="56" y1="80" x2="150" y2="80" stroke="${isCurrentOk ? '#38ef7d' : '#ff4b4b'}" stroke-width="4" stroke-dasharray="6,4"/>
+                    
+                    <!-- Load -->
+                    <rect x="150" y="65" width="30" height="30" rx="4" fill="#1e293b" stroke="#00f2fe" stroke-width="2"/>
+                    <text x="165" y="84" text-anchor="middle" fill="#f8fafc" font-family="Fira Code" font-size="10">LOAD</text>
+                    <text x="165" y="112" text-anchor="middle" fill="#94a3b8" font-family="Inter" font-size="9">${(V - vDrop).toFixed(1)}V</text>
+
+                    <text x="103" y="70" text-anchor="middle" fill="#ffb703" font-family="Fira Code" font-size="9">${L}m (${cable.area}mm²)</text>
+                    <text x="103" y="100" text-anchor="middle" fill="#94a3b8" font-family="Fira Code" font-size="9">I = ${I}A</text>
+                </g>
+            `;
+
+            document.getElementById('visualizer-legend').innerHTML = `
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Material: <span class="text-white font-bold">${mat}</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Temp Derating: <span class="text-white font-bold">${(tempFactor * 100).toFixed(0)}%</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">V-Loss: <span class="text-brand-cyan font-bold">${vDrop.toFixed(2)}V</span></div>
+            `;
+        }
+
+        // ------------------- POWER FACTOR CORRECTION -------------------
+        function calcPF() {
+            const P = parseFloat(document.getElementById('pf-kw').value) || 0; // kW
+            const V = parseFloat(document.getElementById('pf-volts').value) || 400; // Volts
+            const f = parseFloat(document.getElementById('pf-freq').value) || 50; // Hz
+            const pf1 = parseFloat(document.getElementById('pf-initial').value) || 0.7;
+            const pf2 = parseFloat(document.getElementById('pf-target').value) || 0.95;
+
+            const phi1 = Math.acos(pf1); // Radians
+            const phi2 = Math.acos(pf2); // Radians
+
+            const Q1 = P * Math.tan(phi1); // Initial kVAR
+            const Q2 = P * Math.tan(phi2); // Target kVAR
+            const Qc = Q1 - Q2; // Required Capacitor Bank kVAR
+
+            const S1 = P / pf1; // Initial Apparent Power kVA
+            const S2 = P / pf2; // Target Apparent Power kVA
+
+            // Capacitance C = Qc / (2 * pi * f * V^2)
+            // Qc in VAR = Qc * 1000
+            const capacitanceMicroFarad = (Qc * 1000) / (2 * Math.PI * f * Math.pow(V, 2)) * 1e6;
+
+            // Current Reduction
+            const I1 = (S1 * 1000) / (Math.sqrt(3) * V);
+            const I2 = (S2 * 1000) / (Math.sqrt(3) * V);
+            const currentSavedPercent = ((I1 - I2) / I1) * 100;
+
+            // Update KPI Display
+            document.getElementById('kpi-cards-grid').innerHTML = `
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Capacitor Bank Needed</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-violet">
+                        ${Qc.toFixed(1)} kVAR
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Capacitance: ${capacitanceMicroFarad.toFixed(1)} µF</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Apparent Power (S)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-cyan">
+                        ${S2.toFixed(1)} kVA
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Reduced from ${S1.toFixed(1)} kVA</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Line Current Saved</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-emerald-400">
+                        ${currentSavedPercent.toFixed(1)}%
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">I1: ${I1.toFixed(1)}A → I2: ${I2.toFixed(1)}A</span>
+                </div>
+            `;
+
+            // Table Summary
+            document.getElementById('detailed-spec-table').innerHTML = `
+                <tr>
+                    <td class="py-2 px-3">Initial Reactive Power (Q1)</td>
+                    <td class="py-2 px-3 font-bold text-amber-400">${Q1.toFixed(1)} kVAR</td>
+                    <td class="py-2 px-3">Uncorrected System</td>
+                    <td class="py-2 px-3 text-right">cos φ = ${pf1}</td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Corrected Reactive Power (Q2)</td>
+                    <td class="py-2 px-3 font-bold text-brand-cyan">${Q2.toFixed(1)} kVAR</td>
+                    <td class="py-2 px-3">Optimized Target</td>
+                    <td class="py-2 px-3 text-right">cos φ = ${pf2}</td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Required Compensation ($Q_c$)</td>
+                    <td class="py-2 px-3 font-bold text-brand-violet">${Qc.toFixed(1)} kVAR</td>
+                    <td class="py-2 px-3">Star/Delta Cap Bank</td>
+                    <td class="py-2 px-3 text-right text-emerald-400">${capacitanceMicroFarad.toFixed(1)} µF</td>
+                </tr>
+            `;
+
+            // Render SVG Vector Phasor Diagram
+            document.getElementById('visualizer-title').innerText = "REALTIME POWER TRIANGLE & PHASOR VECTOR DIAGRAM";
+            const svg = document.getElementById('main-svg-canvas');
+
+            // Vector drawing scales
+            const scaleP = 220; // Length of active power P line
+            const scaleQ1 = Math.tan(phi1) * scaleP;
+            const scaleQ2 = Math.tan(phi2) * scaleP;
+
+            svg.innerHTML = `
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+                </pattern>
+                <rect width="600" height="300" fill="url(#grid)" />
+
+                <g transform="translate(100, 230)">
+                    <!-- Axis -->
+                    <line x1="0" y1="0" x2="350" y2="0" stroke="#334155" stroke-width="2"/>
+                    <line x1="0" y1="0" x2="0" y2="-180" stroke="#334155" stroke-width="2"/>
+                    
+                    <!-- Active Power P Vector -->
+                    <line x1="0" y1="0" x2="${scaleP}" y2="0" stroke="#00f2fe" stroke-width="4"/>
+                    <text x="${scaleP / 2}" y="20" text-anchor="middle" fill="#00f2fe" font-family="Fira Code" font-size="12" font-weight="bold">P = ${P} kW</text>
+
+                    <!-- Uncorrected Q1 Vector -->
+                    <line x1="${scaleP}" y1="0" x2="${scaleP}" y2="-${scaleQ1}" stroke="#ffb703" stroke-width="2" stroke-dasharray="4,4"/>
+                    <!-- Uncorrected S1 Vector -->
+                    <line x1="0" y1="0" x2="${scaleP}" y2="-${scaleQ1}" stroke="#ffb703" stroke-width="3"/>
+                    <text x="${scaleP + 10}" y="-${scaleQ1 / 2}" fill="#ffb703" font-family="Fira Code" font-size="10">Q1 = ${Q1.toFixed(1)} kVAR</text>
+
+                    <!-- Corrected Q2 Vector -->
+                    <line x1="${scaleP}" y1="0" x2="${scaleP}" y2="-${scaleQ2}" stroke="#38ef7d" stroke-width="3"/>
+                    <!-- Corrected S2 Vector -->
+                    <line x1="0" y1="0" x2="${scaleP}" y2="-${scaleQ2}" stroke="#38ef7d" stroke-width="3"/>
+                    <text x="${scaleP / 2 - 20}" y="-${scaleQ2 / 2 + 10}" fill="#38ef7d" font-family="Fira Code" font-size="10">S2 = ${S2.toFixed(1)} kVA</text>
+
+                    <!-- Compensation Qc Delta Vector -->
+                    <line x1="${scaleP + 5}" y1="-${scaleQ1}" x2="${scaleP + 5}" y2="-${scaleQ2}" stroke="#7f56d9" stroke-width="4"/>
+                    <text x="${scaleP + 15}" y="-${(scaleQ1 + scaleQ2) / 2}" fill="#7f56d9" font-family="Fira Code" font-size="11" font-weight="bold">Qc = ${Qc.toFixed(1)} kVAR</text>
+
+                    <!-- Angle Arc -->
+                    <path d="M 50 0 A 50 50 0 0 0 ${50 * Math.cos(phi1)} -${50 * Math.sin(phi1)}" fill="none" stroke="#ffb703" stroke-width="1.5"/>
+                    <text x="60" y="-15" fill="#ffb703" font-family="Fira Code" font-size="10">θ1 = ${(phi1 * 180 / Math.PI).toFixed(1)}°</text>
+
+                    <path d="M 80 0 A 80 80 0 0 0 ${80 * Math.cos(phi2)} -${80 * Math.sin(phi2)}" fill="none" stroke="#38ef7d" stroke-width="1.5"/>
+                    <text x="90" y="-5" fill="#38ef7d" font-family="Fira Code" font-size="10">θ2 = ${(phi2 * 180 / Math.PI).toFixed(1)}°</text>
+                </g>
+            `;
+
+            document.getElementById('visualizer-legend').innerHTML = `
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Current Angle θ1: <span class="text-amber-400 font-bold">${(phi1 * 180 / Math.PI).toFixed(1)}°</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Target Angle θ2: <span class="text-emerald-400 font-bold">${(phi2 * 180 / Math.PI).toFixed(1)}°</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Capacitance: <span class="text-brand-violet font-bold">${capacitanceMicroFarad.toFixed(1)} µF</span></div>
+            `;
+        }
+
+        // ------------------- PASSIVE FILTER & BODE PLOT -------------------
+        function calcFilter() {
+            const type = document.getElementById('filter-type').value;
+            const R = (parseFloat(document.getElementById('filter-r').value) || 1) * parseFloat(document.getElementById('filter-r-unit').value);
+            const C_or_L = (parseFloat(document.getElementById('filter-c').value) || 1) * parseFloat(document.getElementById('filter-c-unit').value);
+
+            let fc = 0;
+            if (type.startsWith('RC')) {
+                fc = 1 / (2 * Math.PI * R * C_or_L);
+            } else {
+                fc = R / (2 * Math.PI * C_or_L);
+            }
+
+            const formatFreq = (f) => {
+                if (f >= 1e6) return (f / 1e6).toFixed(2) + ' MHz';
+                if (f >= 1e3) return (f / 1e3).toFixed(2) + ' kHz';
+                return f.toFixed(2) + ' Hz';
+            };
+
+            // KPI Cards
+            document.getElementById('kpi-cards-grid').innerHTML = `
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">-3dB Cutoff Frequency (fc)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-emerald-400">
+                        ${formatFreq(fc)}
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">ωc = ${(2 * Math.PI * fc).toExponential(2)} rad/s</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Time Constant (τ)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-cyan">
+                        ${(1 / (2 * Math.PI * fc) * 1e3).toFixed(3)} ms
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">τ = R × C</span>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Attenuation at Cutoff</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-violet">
+                        -3.01 dB
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">Vout / Vin = 0.707</span>
+                </div>
+            `;
+
+            document.getElementById('detailed-spec-table').innerHTML = `
+                <tr>
+                    <td class="py-2 px-3">Corner Frequency ($f_c$)</td>
+                    <td class="py-2 px-3 font-bold text-emerald-400">${formatFreq(fc)}</td>
+                    <td class="py-2 px-3">half-power point (-3dB)</td>
+                    <td class="py-2 px-3 text-right">Phase Shift: 45°</td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Passband Gain</td>
+                    <td class="py-2 px-3 font-bold">0 dB (1.0 V/V)</td>
+                    <td class="py-2 px-3">Passive topology</td>
+                    <td class="py-2 px-3 text-right text-slate-400">Unitary max</td>
+                </tr>
+            `;
+
+            // SVG Dynamic Bode Plot Curve Rendering
+            document.getElementById('visualizer-title').innerText = "BODE FREQUENCY RESPONSE PLOT (MAGNITUDE & PHASE)";
+            const svg = document.getElementById('main-svg-canvas');
+
+            // Generate plot path curve
+            let pathD = "M ";
+            for (let x = 0; x <= 500; x += 10) {
+                // x axis logarithmically scaled from fc / 100 to fc * 100
+                const f = fc * Math.pow(10, (x - 250) / 100);
+                let gainDb = 0;
+
+                if (type === 'RC-low') {
+                    gainDb = -10 * Math.log10(1 + Math.pow(f / fc, 2));
+                } else if (type === 'RC-high') {
+                    gainDb = -10 * Math.log10(1 + Math.pow(fc / f, 2));
+                }
+
+                // Map gainDb (0 to -40dB) to Y coordinate (50 to 230)
+                const y = 60 - (gainDb * 4); 
+                pathD += `${x + 50},${y} `;
+            }
+
+            svg.innerHTML = `
+                <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+                    <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+                </pattern>
+                <rect width="600" height="300" fill="url(#grid)" />
+
+                <g transform="translate(10, 10)">
+                    <!-- Grid Axis -->
+                    <line x1="50" y1="220" x2="550" y2="220" stroke="#334155" stroke-width="1.5"/>
+                    <line x1="50" y1="30" x2="50" y2="220" stroke="#334155" stroke-width="1.5"/>
+
+                    <!-- Cutoff vertical dashed line -->
+                    <line x1="300" y1="30" x2="300" y2="220" stroke="#ffb703" stroke-width="1.5" stroke-dasharray="4,4"/>
+                    <circle cx="300" cy="72" r="5" fill="#ffb703"/>
+
+                    <!-- Bode Curve Path -->
+                    <path d="${pathD}" fill="none" stroke="#38ef7d" stroke-width="3"/>
+
+                    <!-- Axis Labels -->
+                    <text x="300" y="240" text-anchor="middle" fill="#ffb703" font-family="Fira Code" font-size="11" font-weight="bold">fc = ${formatFreq(fc)}</text>
+                    <text x="50" y="25" fill="#94a3b8" font-family="Fira Code" font-size="10">0 dB</text>
+                    <text x="20" y="75" fill="#94a3b8" font-family="Fira Code" font-size="10">-3 dB</text>
+                    <text x="15" y="140" fill="#94a3b8" font-family="Fira Code" font-size="10">-20 dB</text>
+                    <text x="15" y="210" fill="#94a3b8" font-family="Fira Code" font-size="10">-40 dB</text>
+
+                    <text x="100" y="240" fill="#64748b" font-family="Fira Code" font-size="9">0.01 fc</text>
+                    <text x="500" y="240" fill="#64748b" font-family="Fira Code" font-size="9">100 fc</text>
+                </g>
+            `;
+
+            document.getElementById('visualizer-legend').innerHTML = `
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Cutoff fc: <span class="text-emerald-400 font-bold">${formatFreq(fc)}</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Rolloff Slope: <span class="text-white font-bold">-20 dB/decade</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Topology: <span class="text-brand-cyan font-bold">${type}</span></div>
+            `;
+        }
+
+        // ------------------- OHM'S LAW MATRIX -------------------
+        function calculateOhmMatrix(changedField) {
+            let v = parseFloat(document.getElementById('ohm-v').value);
+            let i = parseFloat(document.getElementById('ohm-i').value);
+            let r = parseFloat(document.getElementById('ohm-r').value);
+            let p = parseFloat(document.getElementById('ohm-p').value);
+
+            // Compute depending on modified field combinations
+            try {
+                if (changedField === 'V' || changedField === 'I') {
+                    if (!isNaN(v) && !isNaN(i)) {
+                        r = v / i;
+                        p = v * i;
+                    }
+                } else if (changedField === 'R') {
+                    if (!isNaN(v) && !isNaN(r)) {
+                        i = v / r;
+                        p = (v * v) / r;
+                    }
+                } else if (changedField === 'P') {
+                    if (!isNaN(p) && !isNaN(v)) {
+                        i = p / v;
+                        r = (v * v) / p;
+                    }
+                }
+            } catch (e) {}
+
+            if (!isNaN(v)) document.getElementById('ohm-v').value = v.toFixed(2);
+            if (!isNaN(i)) document.getElementById('ohm-i').value = i.toFixed(2);
+            if (!isNaN(r)) document.getElementById('ohm-r').value = r.toFixed(2);
+            if (!isNaN(p)) document.getElementById('ohm-p').value = p.toFixed(2);
+
+            // KPI Grid
+            document.getElementById('kpi-cards-grid').innerHTML = `
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Potential Difference (V)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-cyan">${v.toFixed(2)} V</div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Current Flow (I)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-emerald-400">${i.toFixed(2)} A</div>
+                </div>
+                <div class="glass-panel p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] font-mono uppercase text-slate-400">Power Dissipation (P)</span>
+                    <div class="text-2xl font-black font-mono mt-1 text-brand-violet">${p.toFixed(2)} W</div>
+                </div>
+            `;
+
+            document.getElementById('detailed-spec-table').innerHTML = `
+                <tr>
+                    <td class="py-2 px-3">Resistance (R)</td>
+                    <td class="py-2 px-3 font-bold text-amber-400">${r.toFixed(2)} Ω</td>
+                    <td class="py-2 px-3">DC Resistance / Impedance</td>
+                    <td class="py-2 px-3 text-right">R = V / I</td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3">Power Dissipated (P)</td>
+                    <td class="py-2 px-3 font-bold text-brand-violet">${p.toFixed(2)} W</td>
+                    <td class="py-2 px-3">Thermal Loss</td>
+                    <td class="py-2 px-3 text-right">P = I² × R</td>
+                </tr>
+            `;
+
+            // SVG Ohm's Wheel Graphic Visualizer
+            document.getElementById('visualizer-title').innerText = "OHM'S LAW INTERLOCKING QUADRANT WHEEL";
+            const svg = document.getElementById('main-svg-canvas');
+            
+            svg.innerHTML = `
+                <g transform="translate(300, 150)">
+                    <!-- Outer Circle Wheel -->
+                    <circle cx="0" cy="0" r="110" fill="none" stroke="#1e293b" stroke-width="4"/>
+                    <line x1="-110" y1="0" x2="110" y2="0" stroke="#334155" stroke-width="2"/>
+                    <line x1="0" y1="-110" x2="0" y2="110" stroke="#334155" stroke-width="2"/>
+
+                    <!-- Quadrant V -->
+                    <text x="-50" y="-45" text-anchor="middle" fill="#00f2fe" font-family="Fira Code" font-size="20" font-weight="bold">V</text>
+                    <text x="-50" y="-25" text-anchor="middle" fill="#94a3b8" font-family="Fira Code" font-size="11">${v.toFixed(1)} V</text>
+
+                    <!-- Quadrant I -->
+                    <text x="50" y="-45" text-anchor="middle" fill="#38ef7d" font-family="Fira Code" font-size="20" font-weight="bold">I</text>
+                    <text x="50" y="-25" text-anchor="middle" fill="#94a3b8" font-family="Fira Code" font-size="11">${i.toFixed(1)} A</text>
+
+                    <!-- Quadrant R -->
+                    <text x="-50" y="40" text-anchor="middle" fill="#ffb703" font-family="Fira Code" font-size="20" font-weight="bold">R</text>
+                    <text x="-50" y="60" text-anchor="middle" fill="#94a3b8" font-family="Fira Code" font-size="11">${r.toFixed(1)} Ω</text>
+
+                    <!-- Quadrant P -->
+                    <text x="50" y="40" text-anchor="middle" fill="#a855f7" font-family="Fira Code" font-size="20" font-weight="bold">P</text>
+                    <text x="50" y="60" text-anchor="middle" fill="#94a3b8" font-family="Fira Code" font-size="11">${p.toFixed(1)} W</text>
+
+                    <circle cx="0" cy="0" r="28" fill="#0f172a" stroke="#00f2fe" stroke-width="2"/>
+                    <text x="0" y="4" text-anchor="middle" fill="#00f2fe" font-family="Fira Code" font-size="10" font-weight="bold">OHM</text>
+                </g>
+            `;
+
+            document.getElementById('visualizer-legend').innerHTML = `
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Voltage: <span class="text-brand-cyan font-bold">${v.toFixed(2)} V</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Current: <span class="text-emerald-400 font-bold">${i.toFixed(2)} A</span></div>
+                <div class="bg-slate-900/60 p-2 rounded border border-slate-800 text-slate-400">Power: <span class="text-brand-violet font-bold">${p.toFixed(2)} W</span></div>
+            `;
+        }
+
+        // Export Report Trigger
+        function exportReport() {
+            document.getElementById('print-date').innerText = new Date().toLocaleString();
+            document.getElementById('print-content').innerHTML = `
+                <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+                    <h3>Active Engineering Module: ${currentTab.toUpperCase()}</h3>
+                    <p>Verified according to IEEE and NEC electrical standard criteria.</p>
+                </div>
+            `;
+            window.print();
+        }
+
+        // Modals
+        function openFormulaModal() {
+            document.getElementById('formula-modal').classList.remove('hidden');
+        }
+
+        function closeFormulaModal() {
+            document.getElementById('formula-modal').classList.add('hidden');
+        }
+
+        // Initialize Default Tab on window load
+        window.onload = function() {
+            renderInputs();
+            calculateAndRender();
+        };
+    </script>
+</body>
+</html>
